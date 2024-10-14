@@ -55,7 +55,8 @@ lidar.enablePointCloud()
 jam_jar_pose = (1.71, -0.302, 0.889)
 
 # position and orientation of robot to reach first jam jar
-first_jar_position = [0.4, -0.28, 0]
+first_jar_position = [0.4, -0.3, 0]
+first_jar_grabbing_position = [0.6, -0.3, 0]
 
 forward_values = {
             'torso_lift_joint' : 0.30,
@@ -87,8 +88,8 @@ tree = Sequence("Main Sequence: ", children= [
     Navigation("Move to first jar", blackboard, first_jar_position[:2]),
     RotateToAngle("Orient towards first jar", blackboard, first_jar_position[2]),
     AdjustArm("Move arm forwards", blackboard, forward_values),
-    CloseGripper("Grab first jar", blackboard),
-    
+    Navigation("Move forwards", blackboard, first_jar_grabbing_position[:2]),
+    CloseGripper("Grab jar", blackboard)
 ], memory=True)
 tree.setup_with_descendants()
 

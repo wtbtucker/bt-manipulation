@@ -2,12 +2,11 @@ import py_trees
 import numpy as np
 
 class Navigation(py_trees.behaviour.Behaviour):
-    def __init__(self, name, blackboard, target_coordinates=None):
+    def __init__(self, name, blackboard, target_coordinates):
         super(Navigation, self).__init__(name)
         self.robot = blackboard.read('robot')
         self.blackboard = blackboard
-        if target_coordinates:
-            self.blackboard.write('WP', [target_coordinates])
+        self.target = target_coordinates
 
     def setup(self):
         self.timestep = int(self.robot.getBasicTimeStep())
@@ -32,11 +31,6 @@ class Navigation(py_trees.behaviour.Behaviour):
         self.right_motor.setVelocity(0.0)
         self.logger.debug(" %s [Nagivation::update()]" % self.name)
         print('Navigating')
-
-        # Update marker position to correct position
-        self.index = 0
-        self.WP = self.blackboard.read('WP')
-        # self.marker.setSFVec3f([*self.WP[self.index], 0])
     
     def update(self):
         self.logger.debug(" %s [Navigation::update()]" % self.name) 
@@ -53,8 +47,8 @@ class Navigation(py_trees.behaviour.Behaviour):
             theta += 2*np.pi
 
         # Calculate error
-        delta_x = self.WP[self.index][0] - xw
-        delta_y = self.WP[self.index][1] - yw
+        delta_x = self.target[0] - xw
+        delta_y = self.target[1] - yw
 
         rho = np.sqrt(delta_x**2 + delta_y**2)
         alpha = np.arctan2(delta_y, delta_x) - theta
