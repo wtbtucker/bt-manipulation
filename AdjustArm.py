@@ -68,6 +68,10 @@ class AdjustArm(py_trees.behaviour.Behaviour):
             total_error += error**2
 
         if total_error < 0.001:
+            # Stop the joint motors
+            for handle in self.key2handle.values():
+                handle.setVelocity(0.0)
+            print('Raised arm')
             return py_trees.common.Status.SUCCESS
         else:
             return py_trees.common.Status.RUNNING
