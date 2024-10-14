@@ -15,11 +15,8 @@ class AdjustArm(py_trees.behaviour.Behaviour):
         self.blackboard = blackboard
         self.robot = self.blackboard.read('robot')
         self.timestep = int(self.robot.getBasicTimeStep())
-
         self.target_values = goal
-
-        self.joints = ['torso_lift_joint', 'arm_1_joint', 'arm_2_joint', 'arm_3_joint', \
-          'arm_4_joint', 'arm_5_joint', 'arm_6_joint', 'arm_7_joint', 'gripper_left_finger_joint', 'gripper_right_finger_joint', 'head_1_joint', 'head_2_joint']
+        self.joints = self.target_values.keys()
 
         self.joint2max_speed = {
             'arm_1_joint': 1.95,
@@ -33,13 +30,12 @@ class AdjustArm(py_trees.behaviour.Behaviour):
             'gripper_right_finger_joint': 0.05,
             'torso_lift_joint': 0.07
         }
-    def setup(self):
-        # proportional constant
-        self.kp = 2
+        self.kp = 1
         
         self.key2handle = {}
         self.key2sensor = {}
 
+    def initialise(self) -> None:
         # Initialize joint motors and set to velocity mode
         for joint in self.joints:
             self.key2handle[joint] = self.robot.getDevice(joint)
@@ -47,11 +43,13 @@ class AdjustArm(py_trees.behaviour.Behaviour):
             self.key2handle[joint].setVelocity(0.0)
         
         # Initialize and enable joint sensors
-        sensor_names = [get_encoder_name(joint_name) for joint_name in self.joints]
-        for sensor_name, joint_name in zip(sensor_names, self.joints):
+        for joint_name in self.joints:
+            sensor_name = get_encoder_name(joint_name)
             self.key2sensor[joint_name] = self.robot.getDevice(sensor_name)
             self.key2sensor[joint_name].enable(self.timestep)
     
+
+    # keep gripped in positional mode, error is so small force is decreasing
     def update(self):
         total_error = 0.0
         for joint, target_value in self.target_values.items():

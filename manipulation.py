@@ -1,9 +1,10 @@
 from controller import Supervisor
+import numpy as np
 import py_trees
-from py_trees.composites import Selector, Sequence
+from py_trees.composites import Selector, Sequence, Parallel
 from AdjustArm import AdjustArm
 from navigation import Navigation
-from CloseGripper import CloseGripper
+from Gripper import Gripper
 from RotateToAngle import RotateToAngle
 
 robot = Supervisor()
@@ -59,37 +60,51 @@ first_jar_position = [0.4, -0.3, 0]
 first_jar_grabbing_position = [0.6, -0.3, 0]
 
 forward_values = {
-            'torso_lift_joint' : 0.30,
-            'arm_1_joint' : 1.6,
-            'arm_2_joint' : 0,
-            'arm_3_joint' : 0,
-            'arm_4_joint' : 0,
-            'arm_5_joint' : 0,
-            'arm_6_joint' : 0,
-            'arm_7_joint' : 1.6,
-            'gripper_left_finger_joint': 0.045,
-            'gripper_right_finger_joint': 0.045
-        }
+    'torso_lift_joint' : 0.35,
+    'arm_1_joint' : 1.6,
+    'arm_2_joint' : 0,
+    'arm_3_joint' : 0,
+    'arm_4_joint' : 0,
+    'arm_5_joint' : 0,
+    'arm_6_joint' : 0,
+    'arm_7_joint' : 1.6,
+}
 
 raised_values = {
-            'torso_lift_joint' : 0.30,
-            'arm_1_joint' : 0.71,
-            'arm_2_joint' : 1.02,
-            'arm_3_joint' : -2.815,
-            'arm_4_joint' : 1.011,
-            'arm_5_joint' : 0,
-            'arm_6_joint' : 0,
-            'arm_7_joint' : 0,
-        }
+    'torso_lift_joint' : 0.30,
+    'arm_1_joint' : 0.71, 
+    'arm_2_joint' : 1.02,
+    'arm_3_joint' : -2.815,
+    'arm_4_joint' : 1.011,
+    'arm_5_joint' : 0,
+    'arm_6_joint' : 0,  
+    'arm_7_joint' : 0
+}
+
+tucked_values = {
+    'torso_lift_joint' : 0.40,
+    'arm_1_joint' : 0.07,
+    'arm_2_joint' : 0,
+    'arm_3_joint' : -np.pi/2,
+    'arm_4_joint' : 2.29,
+    'arm_5_joint' : 0,
+    'arm_6_joint' : 0,  
+    'arm_7_joint' : 0
+}
 
 
 tree = Sequence("Main Sequence: ", children= [
-    AdjustArm("Raise arm", blackboard, raised_values),
+    Gripper("Open", blackboard, 'open'),
+    AdjustArm("Lower arm", blackboard, forward_values),
     Navigation("Move to first jar", blackboard, first_jar_position[:2]),
     RotateToAngle("Orient towards first jar", blackboard, first_jar_position[2]),
     AdjustArm("Move arm forwards", blackboard, forward_values),
     Navigation("Move forwards", blackboard, first_jar_grabbing_position[:2]),
-    CloseGripper("Grab jar", blackboard)
+    Gripper("Grab jar", blackboard, 'close'),
+    Parallel("Grip and Raise", py_trees.common.ParallelPolicy.SuccessOnAll(synchronise=True), children=[
+        Gripper("Grab jar", blackboard, action='close'),
+        AdjustArm("Tuck arm", blackboard, tucked_values)
+    ])
 ], memory=True)
 tree.setup_with_descendants()
 
