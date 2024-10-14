@@ -10,10 +10,6 @@ class RotateToAngle(py_trees.behaviour.Behaviour):
         self.target_angle = target_angle  # Target orientation in radians
     
     def setup(self):
-        # Get motor handles
-        self.left_motor = self.robot.getDevice('wheel_left_joint')
-        self.right_motor = self.robot.getDevice('wheel_right_joint')
-
         # Get sensor handles (GPS and compass)
         self.gps = self.robot.getDevice('gps')
         self.compass = self.robot.getDevice('compass')
@@ -24,6 +20,15 @@ class RotateToAngle(py_trees.behaviour.Behaviour):
 
         self.MAX_SPEED = 6.28  # Max motor speed
         self.kp = 1.0  # Proportional gain for orientation control
+    
+    def initialise(self) -> None:
+        # Get motor handles and put in velocity mode
+        self.left_motor = self.robot.getDevice('wheel_left_joint')
+        self.right_motor = self.robot.getDevice('wheel_right_joint')
+        self.left_motor.setPosition(float('inf'))
+        self.right_motor.setPosition(float('inf'))
+        self.left_motor.setVelocity(0.0)
+        self.right_motor.setVelocity(0.0)
 
     def update(self):
         # Get current orientation from compass
@@ -54,6 +59,11 @@ class RotateToAngle(py_trees.behaviour.Behaviour):
 
         # Stop when error is sufficiently small
         if abs(error) < 0.01:  # You can adjust this threshold
+            print('Reached target orientation')
             return py_trees.common.Status.SUCCESS
         else:
             return py_trees.common.Status.RUNNING
+
+    def terminate(self, new_status):
+        self.left_motor.setVelocity(0.0)
+        self.right_motor.setVelocity(0.0)

@@ -1,4 +1,5 @@
 import py_trees
+from py_trees.common import Status
 
 def get_encoder_name(joint_name):
     if joint_name == 'gripper_left_finger_joint':
@@ -33,7 +34,6 @@ class AdjustArm(py_trees.behaviour.Behaviour):
             'torso_lift_joint': 0.07
         }
     def setup(self):
-        print(self.name)
         # proportional constant
         self.kp = 2
         
@@ -68,13 +68,15 @@ class AdjustArm(py_trees.behaviour.Behaviour):
             total_error += error**2
 
         if total_error < 0.001:
-            # Stop the joint motors
-            for handle in self.key2handle.values():
-                handle.setVelocity(0.0)
-            print('Raised arm')
+            print(f'{self.name}: success')
             return py_trees.common.Status.SUCCESS
         else:
             return py_trees.common.Status.RUNNING
+    
+    def terminate(self, new_status) -> None:
+        # Stop the joint motors
+        for handle in self.key2handle.values():
+            handle.setVelocity(0.0)
 
         
 
