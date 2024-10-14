@@ -29,35 +29,15 @@ lidar.enable(timestep)
 lidar.enablePointCloud()
 
 # TODO:
-
-# Identify position an orientation of robot where it can grab jam jar
-# Plan route/navigate to pose with arm up in safe mode
-# Drop arm down so it grabs jam jar
-    # Not terminating
-    # Something wrong with target values?
-    # gripper is stopped from moving by external force (jam jar)
-# close grippers and lift arm back into safe mode
-
-
-# safe configuration for nagivating the table
-# calculate position and orientation of robot necessary to grab jam jar with arm in forward position
-# How to reliably line up the robot with the jar?
 # using computer vision?
-
-# Do I need to create a configuration map of the area?
-# Really only navigating between the counter and table
-#2-layer configuration map
-# layer for arm up in safe position vs arm out straight
-
-
-
-
 
 jam_jar_pose = (1.71, -0.302, 0.889)
 
 # position and orientation of robot to reach first jam jar
 first_jar_position = [0.4, -0.3, 0]
 first_jar_grabbing_position = [0.6, -0.3, 0]
+
+first_table_position = [0.5, -1.9, np.pi]
 
 forward_values = {
     'torso_lift_joint' : 0.35,
@@ -104,6 +84,10 @@ tree = Sequence("Main Sequence: ", children= [
     Parallel("Grip and Raise", py_trees.common.ParallelPolicy.SuccessOnAll(synchronise=True), children=[
         Gripper("Grab jar", blackboard, action='close'),
         AdjustArm("Tuck arm", blackboard, tucked_values)
+    ]),
+    Parallel("Grip and Drive", py_trees.common.ParallelPolicy.SuccessOnAll(synchronise=True), children=[
+        Gripper("Grab jar", blackboard, action='close'),
+        Navigation("Move to place first jar", blackboard, first_table_position)
     ])
 ], memory=True)
 tree.setup_with_descendants()
