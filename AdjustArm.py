@@ -30,7 +30,7 @@ class AdjustArm(py_trees.behaviour.Behaviour):
             'gripper_right_finger_joint': 0.05,
             'torso_lift_joint': 0.07
         }
-        self.kp = 1
+        self.kp = 0.75
         
         self.key2handle = {}
         self.key2sensor = {}
