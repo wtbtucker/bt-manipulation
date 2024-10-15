@@ -25,7 +25,7 @@ def get_neighbors(curr, map):
     x, y  = curr
     for delta_x, delta_y in [(-1,0), (1,0), (0, -1), (0, 1), (1, 1), (-1, -1), (1, -1), (-1, 1)]:
         new_x, new_y = x+delta_x, y+delta_y
-        if 0 <= new_x < len(map) and 0 <= new_y < len(map[0]) and map[new_x][new_y] < 0.3:
+        if 0 <= new_x < len(map) and 0 <= new_y < len(map[0]):
             neighors.append(((new_x, new_y), np.sqrt(delta_x**2 + delta_y**2)))      
     return neighors
 
@@ -83,7 +83,7 @@ class Planning(py_trees.behaviour.Behaviour):
 
     def initialise(self):
         self.logger.debug(" %s [Planning::initialise()]" % self.name)
-        self.map = np.load('cspace.npy')
+        self.map = np.zeros((200, 300))
     
     def update(self):
         self.logger.debug(" %s [Planning::update()]" % self.name)
@@ -98,6 +98,7 @@ class Planning(py_trees.behaviour.Behaviour):
         world_path = [map2world(point) for point in path]
 
         # write shortest path to waypoints so navigation can access
-        self.blackboard.write('waypoints', world_path)
+        self.blackboard.write('WP', world_path)
 
+        print(f"Route planned to {self.goal}")
         return py_trees.common.Status.SUCCESS

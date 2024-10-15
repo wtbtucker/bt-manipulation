@@ -2,11 +2,10 @@ import py_trees
 import numpy as np
 
 class Navigate(py_trees.behaviour.Behaviour):
-    def __init__(self, name, blackboard, target_coordinates):
+    def __init__(self, name, blackboard):
         super(Navigate, self).__init__(name)
         self.robot = blackboard.read('robot')
         self.blackboard = blackboard
-        self.target = target_coordinates
 
     def setup(self):
         self.timestep = int(self.robot.getBasicTimeStep())
@@ -23,7 +22,6 @@ class Navigate(py_trees.behaviour.Behaviour):
     
     def initialise(self):
         # Initialize and set motors to velocity mode
-        print(f'Navigating to {self.target}')
         self.left_motor = self.robot.getDevice('wheel_left_joint')
         self.right_motor = self.robot.getDevice('wheel_right_joint')
         self.left_motor.setPosition(float('inf'))
@@ -31,6 +29,10 @@ class Navigate(py_trees.behaviour.Behaviour):
         self.left_motor.setVelocity(0.0)
         self.right_motor.setVelocity(0.0)
         self.logger.debug(" %s [Nagivation::update()]" % self.name)
+
+        # set up to iterate through waypoints
+        self.index = 0
+        self.WP = self.blackboard.read('WP')
     
     def update(self):
         self.logger.debug(" %s [Navigation::update()]" % self.name) 
@@ -47,8 +49,8 @@ class Navigate(py_trees.behaviour.Behaviour):
             theta += 2*np.pi
 
         # Calculate error
-        delta_x = self.target[0] - xw
-        delta_y = self.target[1] - yw
+        delta_x = self.WP[self.index][0] - xw
+        delta_y = self.WP[self.index][1] - yw
 
         rho = np.sqrt(delta_x**2 + delta_y**2)
         alpha = np.arctan2(delta_y, delta_x) - theta
@@ -60,8 +62,8 @@ class Navigate(py_trees.behaviour.Behaviour):
             alpha += 2*np.pi
         
         # Compute actuator values
-        p1 = 10
-        p2 = 5
+        p1 = 4
+        p2 = 2
         vL = -p1*alpha + p2*rho
         vR = p1*alpha + p2*rho
 
@@ -70,23 +72,23 @@ class Navigate(py_trees.behaviour.Behaviour):
         vL = max(min(vL, MAX_SPEED), -MAX_SPEED)
         vR = max(min(vR, MAX_SPEED), -MAX_SPEED)
 
-        MIN_SPEED = 0.5
-        # Apply a minimum speed threshold
-        if rho < 0.1:
-            vL = max(abs(vL), MIN_SPEED) * np.sign(vL)
-            vR = max(abs(vR), MIN_SPEED) * np.sign(vR)
-
         # Set actuator values
         self.left_motor.setVelocity(vL)
         self.right_motor.setVelocity(vR)
 
-        # Return success if close enough to target position
-        if rho < 0.01:
-            print(f"Reached target coordinates")
-            self.feedback_message = "Last waypoint reached"
-            return py_trees.common.Status.SUCCESS
+        if self.index == (len(self.WP) - 1):
+            if rho < 0.01:
+                print(f"Reached target coordinates")
+                self.feedback_message = "Last waypoint reached"
+                return py_trees.common.Status.SUCCESS
+            else:
+                return py_trees.common.Status.RUNNING
+        elif rho < 0.4:
+            self.index += 1
+            return py_trees.common.Status.RUNNING
         else:
             return py_trees.common.Status.RUNNING
+        
     
     def terminate(self, new_status):
         self.logger.debug(" %s [Foo::terminate().terminate()]" %self.name)
