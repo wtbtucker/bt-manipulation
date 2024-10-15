@@ -19,7 +19,7 @@ class RotateToAngle(py_trees.behaviour.Behaviour):
         self.compass.enable(self.timestep)
 
         self.MAX_SPEED = 6.28  # Max motor speed
-        self.kp = 0.75  # Proportional gain for orientation control
+        self.kp = 2.0  # Proportional gain for orientation control
     
     def initialise(self) -> None:
         # Get motor handles and put in velocity mode
@@ -58,7 +58,7 @@ class RotateToAngle(py_trees.behaviour.Behaviour):
         self.right_motor.setVelocity(angular_velocity)
 
         # Stop when error is sufficiently small
-        if abs(error) < 0.01:  # You can adjust this threshold
+        if abs(error) < 0.025:  # You can adjust this threshold
             print('Reached target orientation')
             return py_trees.common.Status.SUCCESS
         else:

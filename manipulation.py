@@ -37,7 +37,7 @@ jam_jar_pose = (1.71, -0.302, 0.889)
 
 
 forward_values = {
-    'torso_lift_joint' : 0.075,
+    'torso_lift_joint' : 0.065,
     'arm_1_joint' : 1.6,
     'arm_2_joint' : np.pi/4,
     'arm_3_joint' :0,
@@ -89,7 +89,7 @@ def create_bring_jar_to(target_coordinates):
         ], memory=True) 
     ])
 
-WP = [(0.5, -0.3, 0), (0.5, -1.75, np.pi), (0.545, -0.115, 0.45), (0.6, -1.75, np.pi), (0.5, 0.494, 0), (0.65, -1.75, np.pi)]
+WP = [(0.5, -0.3, 0), (0.6, -1.75, np.pi), (0.656, -0.06, 0.45), (0.65, -1.75, np.pi), (0.5, 0.494, 0), (0.7, -1.75, np.pi)]
 
 tree = Sequence("Main Sequence: ", children= [
     # First jar
@@ -108,6 +108,7 @@ tree = Sequence("Main Sequence: ", children= [
             Reverse("Back away from counter 1", blackboard, distance=0.1),
             Navigate("Drive to table 1", blackboard, WP[1][:2]),
             RotateToAngle("Orient towards table 1", blackboard, WP[1][2]),
+            AdjustTorsoHeight("Lower robot 1", blackboard, 0.05),
             AdjustArm("Lower Arm", blackboard, forward_values)
         ], memory=True)
     ]),
@@ -117,8 +118,9 @@ tree = Sequence("Main Sequence: ", children= [
     AdjustArm("Tuck arm", blackboard, tucked_values),
     Navigate("Move to second jar", blackboard, WP[2][:2]),
     RotateToAngle("Orient towards second jar", blackboard, WP[2][2]),
+    # AdjustTorsoHeight("Lift to clear counter", blackboard, 0.2),
     AdjustArm("Move arm forwards", blackboard, forward_values),
-    DriveForward("Approach first Jar", blackboard, distance=0.1),
+    # DriveForward("Approach second Jar", blackboard, distance=0.1),
     Gripper("Grab jar", blackboard, 'close'),
     Parallel("Bring Jar 2 to table", py_trees.common.ParallelPolicy.SuccessOnAll(synchronise=True), children=[
         Gripper("Grab jar 2", blackboard, action='close'),

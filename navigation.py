@@ -59,8 +59,8 @@ class Navigate(py_trees.behaviour.Behaviour):
             alpha += 2*np.pi
         
         # Compute actuator values
-        p1 = 8
-        p2 = 4
+        p1 = 10
+        p2 = 5
         vL = -p1*alpha + p2*rho
         vR = p1*alpha + p2*rho
 
