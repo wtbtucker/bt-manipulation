@@ -1,7 +1,7 @@
 from controller import Supervisor
 import numpy as np
 import py_trees
-from py_trees.composites import Selector, Sequence, Parallel
+from py_trees.composites import Sequence, Parallel
 from AdjustArm import AdjustArm
 from navigation import Navigate, DriveForward, Reverse
 from Gripper import Gripper
@@ -30,13 +30,6 @@ lidar = robot.getDevice('Hokuyo URG-04LX-UG01')
 lidar.enable(timestep)
 lidar.enablePointCloud()
 
-# TODO:
-# using computer vision?
-
-jam_jar_pose = (1.71, -0.302, 0.889)
-
-
-
 forward_values = {
     'torso_lift_joint' : 0.065,
     'arm_1_joint' : 1.6,
@@ -48,17 +41,6 @@ forward_values = {
     'arm_7_joint' : 0,
 }
 
-raised_values = {
-    'torso_lift_joint' : 0.30,
-    'arm_1_joint' : 0.71, 
-    'arm_2_joint' : 1.02,
-    'arm_3_joint' : -2.815,
-    'arm_4_joint' : 1.011,
-    'arm_5_joint' : 0,
-    'arm_6_joint' : 0,  
-    'arm_7_joint' : 0
-}
-
 tucked_values = {
     'arm_1_joint' : 1.6,
     'arm_2_joint' : 1.4,
@@ -68,27 +50,6 @@ tucked_values = {
     'arm_6_joint' : 1.8,
     'arm_7_joint' : 0
 }
-
-# Commonly used patterns
-def create_grab_jar():
-    return Sequence("Grab jar", children=[
-    AdjustArm("Move arm forwards", blackboard, forward_values),
-    DriveForward("Approach first Jar", blackboard, distance=0.1),
-    Gripper("Grab jar", blackboard, 'close'),
-], memory=True)
-
-def create_bring_jar_to(target_coordinates):
-    return Parallel("Bring Jar to table", py_trees.common.ParallelPolicy.SuccessOnAll(synchronise=True), children=[
-        Gripper("Grab jar", blackboard, action='close'),
-        Sequence("Lift jar and carry to table", children=[
-            AdjustTorsoHeight("Raise robot", blackboard, 0.15),
-            AdjustArm("Tuck arm", blackboard, tucked_values),
-            Reverse("Back away from counter", blackboard, distance=0.1),
-            Navigate("Drive to table", blackboard, target_coordinates[:2]),
-            RotateToAngle("Orient towards table", blackboard, target_coordinates[2]),
-            AdjustArm("Lower Arm", blackboard, forward_values)
-        ], memory=True) 
-    ])
 
 WP = [(0.55, -0.3, 0), (0.6, -1.75, np.pi), (0.65, -0.045, 0.45), (0.65, -1.75, np.pi), (0.7, 0.1, 0.13), (0.75, -1.8, np.pi)]
 
