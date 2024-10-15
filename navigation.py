@@ -23,6 +23,7 @@ class Navigate(py_trees.behaviour.Behaviour):
     
     def initialise(self):
         # Initialize and set motors to velocity mode
+        print(f'Navigating to {self.target}')
         self.left_motor = self.robot.getDevice('wheel_left_joint')
         self.right_motor = self.robot.getDevice('wheel_right_joint')
         self.left_motor.setPosition(float('inf'))

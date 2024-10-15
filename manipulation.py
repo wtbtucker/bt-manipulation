@@ -89,7 +89,7 @@ def create_bring_jar_to(target_coordinates):
         ], memory=True) 
     ])
 
-WP = [(0.5, -0.3, 0), (0.6, -1.75, np.pi), (0.656, -0.06, 0.45), (0.65, -1.75, np.pi), (0.5, 0.494, 0), (0.7, -1.75, np.pi)]
+WP = [(0.5, -0.3, 0), (0.6, -1.75, np.pi), (0.656, -0.06, 0.45), (0.65, -1.75, np.pi), (0.7, 0.05, 0), (0.7, -1.75, np.pi)]
 
 tree = Sequence("Main Sequence: ", children= [
     # First jar
@@ -134,9 +134,12 @@ tree = Sequence("Main Sequence: ", children= [
         ], memory=True)
     ]),
     Gripper("Place jar", blackboard, action='open'),
+    Reverse("Back away from table 2", blackboard, distance=0.05),
 
     # Third jar
-    AdjustArm("Tuck arm", blackboard, tucked_values),
+    AdjustArm("Forward arm", blackboard, tucked_values),
+    AdjustTorsoHeight("Raise robot 3", blackboard, 0.3),
+    Navigate("Move to third jar intermediary", blackboard, (0.60, -0.25)),
     Navigate("Move to third jar", blackboard, WP[4][:2]),
     RotateToAngle("Orient towards third jar", blackboard, WP[4][2]),
     AdjustArm("Move arm forwards", blackboard, forward_values),
