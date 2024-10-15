@@ -90,7 +90,7 @@ def create_bring_jar_to(target_coordinates):
         ], memory=True) 
     ])
 
-WP = [(0.55, -0.3, 0), (0.6, -1.75, np.pi), (0.65, -0.045, 0.45), (0.65, -1.75, np.pi), (0.7, 0.1, 0.13), (0.7, -1.75, np.pi)]
+WP = [(0.55, -0.3, 0), (0.6, -1.75, np.pi), (0.65, -0.045, 0.45), (0.65, -1.75, np.pi), (0.7, 0.1, 0.13), (0.75, -1.8, np.pi)]
 
 tree = Sequence("Main Sequence: ", children= [
     # First jar
