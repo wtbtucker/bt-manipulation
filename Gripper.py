@@ -29,7 +29,6 @@ class Gripper(py_trees.behaviour.Behaviour):
         self.sensor_right.enable(self.timestep)
     
     def initialise(self):
-        print(f'Setting gripper to: {self.target}')
         self.left_gripper.setPosition(self.target)
         self.right_gripper.setPosition(self.target)
 
@@ -37,7 +36,6 @@ class Gripper(py_trees.behaviour.Behaviour):
         if self.target == 0.0:
             # Check force sensor value 
             force_value = self.left_gripper.getForceFeedback()
-            print(force_value)
             if force_value < self.threshold:
                 print('Grasped object')
                 return py_trees.common.Status.SUCCESS  # Gripper successfully closed on the object

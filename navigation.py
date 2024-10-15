@@ -1,9 +1,9 @@
 import py_trees
 import numpy as np
 
-class Navigation(py_trees.behaviour.Behaviour):
+class Navigate(py_trees.behaviour.Behaviour):
     def __init__(self, name, blackboard, target_coordinates):
-        super(Navigation, self).__init__(name)
+        super(Navigate, self).__init__(name)
         self.robot = blackboard.read('robot')
         self.blackboard = blackboard
         self.target = target_coordinates
@@ -30,7 +30,6 @@ class Navigation(py_trees.behaviour.Behaviour):
         self.left_motor.setVelocity(0.0)
         self.right_motor.setVelocity(0.0)
         self.logger.debug(" %s [Nagivation::update()]" % self.name)
-        print('Navigating')
     
     def update(self):
         self.logger.debug(" %s [Navigation::update()]" % self.name) 
@@ -60,8 +59,8 @@ class Navigation(py_trees.behaviour.Behaviour):
             alpha += 2*np.pi
         
         # Compute actuator values
-        p1 = 5
-        p2 = 2.5
+        p1 = 8
+        p2 = 4
         vL = -p1*alpha + p2*rho
         vR = p1*alpha + p2*rho
 
@@ -69,6 +68,12 @@ class Navigation(py_trees.behaviour.Behaviour):
         MAX_SPEED = 6.28
         vL = max(min(vL, MAX_SPEED), -MAX_SPEED)
         vR = max(min(vR, MAX_SPEED), -MAX_SPEED)
+
+        MIN_SPEED = 0.5
+        # Apply a minimum speed threshold
+        if rho < 0.1:
+            vL = max(abs(vL), MIN_SPEED) * np.sign(vL)
+            vR = max(abs(vR), MIN_SPEED) * np.sign(vR)
 
         # Set actuator values
         self.left_motor.setVelocity(vL)
@@ -84,6 +89,83 @@ class Navigation(py_trees.behaviour.Behaviour):
     
     def terminate(self, new_status):
         self.logger.debug(" %s [Foo::terminate().terminate()]" %self.name)
-        print('Stop translation')
         self.left_motor.setVelocity(0.0)
         self.right_motor.setVelocity(0.0)
+
+class DriveForward(py_trees.behaviour.Behaviour):
+    def __init__(self, name, blackboard, distance=0.15):
+        super(DriveForward, self).__init__(name)
+        self.blackboard = blackboard
+        self.robot = self.blackboard.read('robot')
+        self.distance = distance
+
+    def setup(self):
+        self.timestep = int(self.robot.getBasicTimeStep())
+        
+        self.gps = self.robot.getDevice('gps')
+        self.gps.enable(self.timestep)
+
+    def initialise(self):
+        self.start_position = self.gps.getValues()[:2]
+        # Initialize motors and put in velocity mode
+        self.left_motor = self.robot.getDevice('wheel_left_joint')
+        self.right_motor = self.robot.getDevice('wheel_right_joint')
+        self.left_motor.setPosition(float('inf'))
+        self.right_motor.setPosition(float('inf'))
+        self.left_motor.setVelocity(0.0)
+        self.right_motor.setVelocity(0.0)
+    
+    def update(self):
+        xw, yw = self.gps.getValues()[:2]
+        dx = xw - self.start_position[0]
+        dy = yw - self.start_position[1]
+        distance_travelled = np.sqrt(dx**2 + dy**2)
+
+        # Continue moving forward until target distance is reached
+        if distance_travelled >= self.distance:
+            self.left_motor.setVelocity(0.0)
+            self.right_motor.setVelocity(0.0)
+            return py_trees.common.Status.SUCCESS
+        else:
+            self.left_motor.setVelocity(4.0)
+            self.right_motor.setVelocity(4.0)
+            return py_trees.common.Status.RUNNING
+        
+class Reverse(py_trees.behaviour.Behaviour):
+    def __init__(self, name, blackboard, distance=0.15):
+        super(Reverse, self).__init__(name)
+        self.blackboard = blackboard
+        self.robot = self.blackboard.read('robot')
+        self.distance = distance
+
+    def setup(self):
+        self.timestep = int(self.robot.getBasicTimeStep())
+        
+        self.gps = self.robot.getDevice('gps')
+        self.gps.enable(self.timestep)
+
+    def initialise(self):
+        self.start_position = self.gps.getValues()[:2]
+        # Initialize motors and put in velocity mode
+        self.left_motor = self.robot.getDevice('wheel_left_joint')
+        self.right_motor = self.robot.getDevice('wheel_right_joint')
+        self.left_motor.setPosition(float('inf'))
+        self.right_motor.setPosition(float('inf'))
+        self.left_motor.setVelocity(0.0)
+        self.right_motor.setVelocity(0.0)
+    
+    def update(self):
+        xw, yw = self.gps.getValues()[:2]
+        dx = xw - self.start_position[0]
+        dy = yw - self.start_position[1]
+        distance_travelled = np.sqrt(dx**2 + dy**2)
+
+        # Continue moving forward until target distance is reached
+        if distance_travelled >= self.distance:
+            self.left_motor.setVelocity(0.0)
+            self.right_motor.setVelocity(0.0)
+            return py_trees.common.Status.SUCCESS
+        else:
+            self.left_motor.setVelocity(-4.0)
+            self.right_motor.setVelocity(-4.0)
+            return py_trees.common.Status.RUNNING
